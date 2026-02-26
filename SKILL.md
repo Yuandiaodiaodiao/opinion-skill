@@ -54,7 +54,7 @@ ls /root/opinionskills/scripts/config.ts 2>/dev/null && echo "scripts ready" || 
 
 ## 环境变量与权限分级
 
-数据查询脚本（search、markets、market-detail、price、orderbook、positions、top-markets）**不需要任何环境变量，也不需要 bun install**，克隆仓库后即可直接运行。
+数据查询脚本（search、markets、market-detail、price、orderbook、positions、trades、top-markets）**不需要任何环境变量，也不需要 bun install**，克隆仓库后即可直接运行。
 
 交易操作脚本（buy、sell、cancel、orders、balances、enable-trading）**必须先 `bun install` 安装 SDK 依赖，并配置 `.env`**。如果用户尝试执行交易操作但未配置环境变量，脚本会报错提示缺少 PRIVATE_KEY / MULTI_SIG_ADDRESS / API_KEY。
 
@@ -75,6 +75,7 @@ bun run scripts/market-detail.ts <marketId> [--json]                            
 bun run scripts/price.ts <assetId> [<assetId2> ...] [--json]                         # 查询价格
 bun run scripts/orderbook.ts <assetId> [--json]                                      # 查看订单簿
 bun run scripts/positions.ts <address> [--limit <n>] [--json]                        # 查看持仓
+bun run scripts/trades.ts <assetId> [--limit <n>] [--filter all|taker|maker] [--json] # 成交记录
 bun run scripts/top-markets.ts [--tag volume|txn] [--window 1h|4h|24h] [--json]      # 热门市场
 
 # 交易操作 (SDK)
@@ -128,7 +129,18 @@ bun run scripts/cancel.ts --all [--market <MARKET_ID>]                          
 查询指定地址的持仓。自动批量查询市场信息，显示 YES/NO 方向。
 `<address>` 为 maker 地址 (内置钱包地址)。
 
-### 7. 热门市场 — `top-markets.ts [options]`
+### 7. 成交记录 — `trades.ts <assetId> [--limit <n>] [--filter all|taker|maker] [--json]`
+
+按 assetId 查询成交记录 (taker 交易)。
+
+| 参数 | 说明 |
+|------|------|
+| `<assetId>` | Asset/Token ID (必填) |
+| `--limit <n>` | 返回数量 (默认 100, 最大 1000) |
+| `--filter all\|taker\|maker` | 筛选类型 (默认 taker) |
+| `--json` | 输出原始 JSON |
+
+### 8. 热门市场 — `top-markets.ts [options]`
 
 | 参数 | 说明 |
 |------|------|
@@ -136,16 +148,16 @@ bun run scripts/cancel.ts --all [--market <MARKET_ID>]                          
 | `--window 1h\|4h\|24h` | 时间窗口 (默认 24h) |
 | `--json` | 输出原始 JSON |
 
-### 8. 启用交易 — `enable-trading.ts`
+### 9. 启用交易 — `enable-trading.ts`
 
 一次性链上授权操作。批准 ERC20 代币用于 CTF Exchange 和 ConditionalTokens 合约。
 需要 BNB gas。执行一次即可，SDK 内部有缓存 (默认 3600s)。
 
-### 9. 查看余额 — `balances.ts [--json]`
+### 10. 查看余额 — `balances.ts [--json]`
 
 通过 SDK 查询内置钱包余额。
 
-### 10. 买入 — `buy.ts`
+### 11. 买入 — `buy.ts`
 
 | 参数 | 说明 |
 |------|------|
@@ -159,7 +171,7 @@ bun run scripts/cancel.ts --all [--market <MARKET_ID>]                          
 - 限价买入: `bun run scripts/buy.ts --market 123 --token 0xabc... --price 0.45 --amount 10`
 - 市价买入: `bun run scripts/buy.ts --market 123 --token 0xabc... --price 0 --amount 10 --type market`
 
-### 11. 卖出 — `sell.ts`
+### 12. 卖出 — `sell.ts`
 
 | 参数 | 说明 |
 |------|------|
@@ -169,7 +181,7 @@ bun run scripts/cancel.ts --all [--market <MARKET_ID>]                          
 | `--shares <N>` | 卖出的 token 数量 (必填) |
 | `--type market\|limit` | 订单类型 (默认 limit) |
 
-### 12. 查看订单 — `orders.ts [options]`
+### 13. 查看订单 — `orders.ts [options]`
 
 | 参数 | 说明 |
 |------|------|
@@ -177,7 +189,7 @@ bun run scripts/cancel.ts --all [--market <MARKET_ID>]                          
 | `--status open` | 仅显示活跃订单 |
 | `--json` | 输出原始 JSON |
 
-### 13. 取消订单 — `cancel.ts`
+### 14. 取消订单 — `cancel.ts`
 
 - `--order <ORDER_ID>` — 取消单个订单
 - `--all [--market <MARKET_ID>]` — 取消全部 (可按市场过滤)
