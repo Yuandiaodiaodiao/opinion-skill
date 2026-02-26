@@ -3,6 +3,7 @@ node_modules
 bun.lockb
 bun.lock
 dist/
+scripts/.cache/
 *.skill
 tests/
 .claude/skills/skill-creator/
