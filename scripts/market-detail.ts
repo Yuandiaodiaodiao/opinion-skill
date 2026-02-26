@@ -1,29 +1,26 @@
 // 获取市场详情
 // 用法: bun run scripts/market-detail.ts <marketId> [--json]
 
-import { api } from "./config";
+import { apiFetch } from "./config";
 
 async function getMarketDetail(marketId: string, json: boolean): Promise<void> {
-  // 先通过 detail-params 获取基本信息
-  const detailResp = await api.get(`/api/markets/detail-params/${marketId}`);
-  if (!detailResp.data.success) {
+  const detailResp = await apiFetch<any>(`/api/markets/detail-params/${marketId}`);
+  if (!detailResp.success) {
     console.error(`Market ${marketId} not found.`);
     process.exit(1);
   }
 
-  const detail = detailResp.data.data;
+  const detail = detailResp.data;
 
-  // 通过 asset-ids 获取 tokenId
-  const assetResp = await api.get(`/api/markets/asset-ids/${marketId}`);
-  const assets = assetResp.data.success ? assetResp.data.data : null;
+  const assetResp = await apiFetch<any>(`/api/markets/asset-ids/${marketId}`);
+  const assets = assetResp.success ? assetResp.data : null;
 
-  // 尝试通过 yesTokenId 反查完整市场信息
   const tokenId = assets?.yesTokenId || detail.yesTokenId;
   let market: any = null;
   if (tokenId) {
     try {
-      const mResp = await api.get(`/api/markets/by-asset/${tokenId}`);
-      if (mResp.data.success) market = mResp.data.data;
+      const mResp = await apiFetch<any>(`/api/markets/by-asset/${tokenId}`);
+      if (mResp.success) market = mResp.data;
     } catch {}
   }
 

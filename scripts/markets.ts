@@ -1,22 +1,20 @@
 // 浏览市场/事件列表
 // 用法: bun run scripts/markets.ts [--limit <n>] [--offset <n>] [--json]
 
-import { api } from "./config";
+import { apiFetch } from "./config";
 
 async function listMarkets(limit: number, offset: number, json: boolean): Promise<void> {
-  const resp = await api.get("/api/markets/wrap-events", {
-    params: { limit, offset },
-  });
+  const resp = await apiFetch<any>("/api/markets/wrap-events", { limit, offset });
 
-  if (!resp.data.success) {
-    console.error("API error:", resp.data.error?.message ?? "unknown");
+  if (!resp.success) {
+    console.error("API error:", resp.error?.message ?? "unknown");
     process.exit(1);
   }
 
-  const { data, total } = resp.data;
+  const { data, total } = resp;
 
   if (json) {
-    console.log(JSON.stringify(resp.data, null, 2));
+    console.log(JSON.stringify(resp, null, 2));
     return;
   }
 

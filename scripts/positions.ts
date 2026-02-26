@@ -1,22 +1,20 @@
 // 查看持仓
 // 用法: bun run scripts/positions.ts <address> [--limit <n>] [--json]
 
-import { api } from "./config";
+import { apiFetch, OPINION_API_HOST } from "./config";
 
 async function getPositions(address: string, limit: number, json: boolean): Promise<void> {
-  const resp = await api.get(`/api/user/positions/${address}`, {
-    params: { limit, includeConditionId: "true" },
-  });
+  const resp = await apiFetch<any>(`/api/user/positions/${address}`, { limit, includeConditionId: "true" });
 
-  if (!resp.data.success) {
-    console.error("API error:", resp.data.error?.message ?? "unknown");
+  if (!resp.success) {
+    console.error("API error:", resp.error?.message ?? "unknown");
     process.exit(1);
   }
 
-  const { data: positions, nextCursor, hasMore } = resp.data.data;
+  const { data: positions, nextCursor, hasMore } = resp.data;
 
   if (json) {
-    console.log(JSON.stringify(resp.data.data, null, 2));
+    console.log(JSON.stringify(resp.data, null, 2));
     return;
   }
 
@@ -27,14 +25,18 @@ async function getPositions(address: string, limit: number, json: boolean): Prom
 
   console.log(`Positions for ${address} (${positions.length} found)\n`);
 
-  // Batch fetch market info for all assetIds
+  // Batch fetch market info
   const assetIds = positions.map((p: any) => p.assetId);
   let marketMap: Record<string, any> = {};
   try {
-    const marketResp = await api.post("/api/markets/batch-by-assets", { assetIds });
-    if (marketResp.data.success) {
-      marketMap = marketResp.data.data;
-    }
+    const res = await fetch(`${OPINION_API_HOST}/api/markets/batch-by-assets`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assetIds }),
+      signal: AbortSignal.timeout(30000),
+    });
+    const batchResp = await res.json() as any;
+    if (batchResp.success) marketMap = batchResp.data;
   } catch {}
 
   for (const pos of positions) {

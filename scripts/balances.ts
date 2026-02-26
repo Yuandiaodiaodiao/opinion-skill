@@ -1,7 +1,7 @@
 // 查看余额 (通过 SDK)
 // 用法: bun run scripts/balances.ts [--json]
 
-import { getClient, MULTI_SIG_ADDRESS } from "./config";
+import { getClient, MULTI_SIG_ADDRESS } from "./sdk-config";
 
 async function checkBalances(json: boolean): Promise<void> {
   const client = getClient();

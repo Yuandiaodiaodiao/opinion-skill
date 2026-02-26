@@ -5,7 +5,7 @@
 // --price: 价格 (0-1 之间, 如 0.5 = 50 cents)。市价单设为 0
 // --type: market (市价单) 或 limit (限价单, 默认)
 
-import { getClient, OrderSide, OrderType } from "./config";
+import { getClient, OrderSide, OrderType } from "./sdk-config";
 import { getPrice } from "./price";
 
 async function buy(

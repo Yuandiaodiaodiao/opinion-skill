@@ -1,22 +1,20 @@
 // 搜索市场
 // 用法: bun run scripts/search.ts <keyword> [--limit <n>]
 
-import { api } from "./config";
+import { apiFetch } from "./config";
 
 async function search(keyword: string, limit: number): Promise<void> {
   console.log(`\nSearching: "${keyword}"\n`);
 
-  const resp = await api.get("/api/markets/search", {
-    params: { q: keyword, limit },
-  });
+  const resp = await apiFetch<any>("/api/markets/search", { q: keyword, limit });
 
-  if (!resp.data.success || !resp.data.data?.length) {
+  if (!resp.success || !resp.data?.length) {
     console.log("No markets found.");
     return;
   }
 
-  const results = resp.data.data;
-  console.log(`Found ${results.length} market(s) (total: ${resp.data.total ?? results.length})\n`);
+  const results = resp.data;
+  console.log(`Found ${results.length} market(s) (total: ${resp.total ?? results.length})\n`);
 
   for (const m of results) {
     console.log(`Market: ${m.title}`);

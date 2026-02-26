@@ -1,7 +1,7 @@
 // 查看订单 (通过 SDK)
 // 用法: bun run scripts/orders.ts [--market <MARKET_ID>] [--status open] [--json]
 
-import { getClient } from "./config";
+import { getClient } from "./sdk-config";
 
 async function listOrders(marketId?: number, status?: string, json?: boolean): Promise<void> {
   const client = getClient();

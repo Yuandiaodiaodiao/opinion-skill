@@ -2,13 +2,22 @@
 
 基于 bun 运行时的 Opinion 预测市场交易工具集。
 
+## 仓库源
+
+https://github.com/Yuandiaodiaodiao/opinion-skill
+
+如果本地没有 scripts 目录，先克隆仓库：
+```bash
+git clone https://github.com/Yuandiaodiaodiao/opinion-skill.git /root/opinionskills
+```
+
 ## 环境检查
 
 ```bash
-ls scripts/config.ts 2>/dev/null && echo "scripts ready" || echo "scripts missing"
+ls /root/opinionskills/scripts/config.ts 2>/dev/null && echo "scripts ready" || { echo "scripts missing, cloning..."; git clone https://github.com/Yuandiaodiaodiao/opinion-skill.git /root/opinionskills; }
 ```
 
-> 所有命令均需在 `/root/opinionskills/` 目录下执行。
+> 所有命令均需在 `/root/opinionskills/` 目录下执行。bun 可直接执行 .ts 文件，无需 bun install。
 
 ## 前置条件
 
@@ -16,23 +25,19 @@ ls scripts/config.ts 2>/dev/null && echo "scripts ready" || echo "scripts missin
    ```bash
    command -v bun >/dev/null 2>&1 && echo "bun $(bun --version)" || { curl -fsSL https://bun.sh/install | bash && source ~/.bashrc; }
    ```
-2. 安装依赖:
-   ```bash
-   cd /root/opinionskills && bun install
-   ```
-3. 创建 `.env` 文件:
+2. 创建 `.env` 文件:
    ```
    PRIVATE_KEY=0x_your_eoa_private_key
-   MULTI_SIG_ADDRESS=0x_your_gnosis_safe_address
+   MULTI_SIG_ADDRESS=0x_your_opinion_builtin_wallet_address
    API_KEY=your_opinion_api_key
    ```
 
 ## 网站前置步骤
 
 1. 前往 Opinion 平台注册账户
-2. 创建 Gnosis Safe 多签钱包 (BSC 链)
+2. 平台会自动创建内置钱包 (Gnosis Safe 多签钱包, BSC 链)
 3. Enable Trading (链上授权, 需要 BNB gas)
-4. 充值 USDC 到多签钱包
+4. 充值 USDT 到内置钱包
 
 ## 入门流程
 
@@ -49,9 +54,9 @@ ls scripts/config.ts 2>/dev/null && echo "scripts ready" || echo "scripts missin
 
 ## 环境变量与权限分级
 
-数据查询脚本（search、markets、market-detail、price、orderbook、positions、top-markets）**不需要任何环境变量**，无需 `.env` 文件即可直接使用。
+数据查询脚本（search、markets、market-detail、price、orderbook、positions、top-markets）**不需要任何环境变量，也不需要 bun install**，克隆仓库后即可直接运行。
 
-交易操作脚本（buy、sell、cancel、orders、balances、enable-trading）**必须配置 `.env`**。如果用户尝试执行交易操作但未配置环境变量，脚本会报错提示缺少 PRIVATE_KEY / MULTI_SIG_ADDRESS / API_KEY。
+交易操作脚本（buy、sell、cancel、orders、balances、enable-trading）**必须先 `bun install` 安装 SDK 依赖，并配置 `.env`**。如果用户尝试执行交易操作但未配置环境变量，脚本会报错提示缺少 PRIVATE_KEY / MULTI_SIG_ADDRESS / API_KEY。
 
 执行交易操作前，先确认 `.env` 是否已配置：
 ```bash
@@ -121,7 +126,7 @@ bun run scripts/cancel.ts --all [--market <MARKET_ID>]                          
 ### 6. 查看持仓 — `positions.ts <address> [--limit <n>] [--json]`
 
 查询指定地址的持仓。自动批量查询市场信息，显示 YES/NO 方向。
-`<address>` 为 maker 地址 (Gnosis Safe 地址)。
+`<address>` 为 maker 地址 (内置钱包地址)。
 
 ### 7. 热门市场 — `top-markets.ts [options]`
 
@@ -138,7 +143,7 @@ bun run scripts/cancel.ts --all [--market <MARKET_ID>]                          
 
 ### 9. 查看余额 — `balances.ts [--json]`
 
-通过 SDK 查询多签钱包余额。
+通过 SDK 查询内置钱包余额。
 
 ### 10. 买入 — `buy.ts`
 
@@ -147,7 +152,7 @@ bun run scripts/cancel.ts --all [--market <MARKET_ID>]                          
 | `--market <ID>` | 市场 ID (必填) |
 | `--token <TOKEN_ID>` | tokenId/assetId (必填) |
 | `--price <P>` | 价格 0-1 (限价单必填, 市价单设 0) |
-| `--amount <AMT>` | USDC 金额 (必填) |
+| `--amount <AMT>` | USDT 金额 (必填) |
 | `--type market\|limit` | 订单类型 (默认 limit) |
 
 示例:
@@ -202,8 +207,8 @@ bun run scripts/cancel.ts --all [--market <MARKET_ID>]                          
 ## 价格说明
 
 - 价格范围: 0 到 1 (exclusive), 如 0.5 = 50 cents
-- 买入 (BUY): 用 USDC 购买 outcome token, 提供 `makerAmountInQuoteToken` (USDC 金额)
-- 卖出 (SELL): 卖出 outcome token 换 USDC, 提供 `makerAmountInBaseToken` (token 数量)
+- 买入 (BUY): 用 USDT 购买 outcome token, 提供 `makerAmountInQuoteToken` (USDT 金额)
+- 卖出 (SELL): 卖出 outcome token 换 USDT, 提供 `makerAmountInBaseToken` (token 数量)
 
 ## 市场结构
 
@@ -224,6 +229,6 @@ SDK API 返回格式: `{ errno: number, errmsg: string, result: T }`
 - 非零 errno 不会抛异常，需检查 errno 值
 
 常见错误:
-- `BalanceNotEnough` — 余额不足, 充值 USDC
+- `BalanceNotEnough` — 余额不足, 充值 USDT
 - `InsufficientGasBalance` — BNB 不足, 充值 BNB
 - `InvalidParamError` — 参数错误, 检查 marketId/tokenId/price

@@ -3,7 +3,7 @@
 //   bun run scripts/cancel.ts --order <ORDER_ID>                    # 取消单个
 //   bun run scripts/cancel.ts --all [--market <MARKET_ID>]          # 取消全部
 
-import { getClient } from "./config";
+import { getClient } from "./sdk-config";
 
 async function cancelOrder(orderId: string): Promise<void> {
   const client = getClient();

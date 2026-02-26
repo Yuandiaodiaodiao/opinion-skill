@@ -1,7 +1,7 @@
 // 启用交易 (一次性操作, 需要 BNB gas)
 // 用法: bun run scripts/enable-trading.ts
 
-import { getClient } from "./config";
+import { getClient } from "./sdk-config";
 
 async function enableTrading(): Promise<void> {
   const client = getClient();

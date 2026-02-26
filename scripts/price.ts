@@ -1,16 +1,13 @@
 // 查询价格
 // 用法: bun run scripts/price.ts <assetId> [<assetId2> ...] [--json]
 
-import { api } from "./config";
+import { apiFetch, OPINION_API_HOST } from "./config";
 
 export async function getPrice(assetIds: string[]): Promise<any[]> {
   if (assetIds.length === 1) {
-    // Single asset: use orderbook for richer data
-    const resp = await api.get(`/api/orderbook/${assetIds[0]}`, {
-      params: { chainId: "56" },
-    });
-    if (resp.data.success) {
-      const d = resp.data.data;
+    const resp = await apiFetch<any>(`/api/orderbook/${assetIds[0]}`, { chainId: "56" });
+    if (resp.success) {
+      const d = resp.data;
       const bids = d.bids || [];
       const asks = d.asks || [];
       const bestBid = bids.length > 0 ? Math.max(...bids.map((b: any) => parseFloat(b[0]))) : null;
@@ -25,13 +22,19 @@ export async function getPrice(assetIds: string[]): Promise<any[]> {
     }
   }
 
-  // Batch price
-  const resp = await api.post("/api/orderbook/batchprice", { assetIds });
-  if (!resp.data.success) {
-    console.error("API error:", resp.data.error?.message ?? "unknown");
+  // Batch price via POST
+  const res = await fetch(`${OPINION_API_HOST}/api/orderbook/batchprice`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetIds }),
+    signal: AbortSignal.timeout(30000),
+  });
+  const resp = await res.json() as any;
+  if (!resp.success) {
+    console.error("API error:", resp.error?.message ?? "unknown");
     process.exit(1);
   }
-  return resp.data.data;
+  return resp.data;
 }
 
 if (import.meta.main) {
@@ -51,14 +54,12 @@ if (import.meta.main) {
     }
     for (const r of results) {
       if ('lastPrice' in r) {
-        // Single asset rich data
         console.log(`Asset: ${r.assetId}`);
         console.log(`  Last Price: ${r.lastPrice != null ? `$${r.lastPrice}` : "N/A"}`);
         console.log(`  Best Bid: ${r.bestBid != null ? `$${r.bestBid}` : "N/A"}`);
         console.log(`  Best Ask: ${r.bestAsk != null ? `$${r.bestAsk}` : "N/A"}`);
         console.log(`  Mid: ${r.mid != null ? `$${Number(r.mid).toFixed(4)}` : "N/A"}`);
       } else {
-        // Batch result
         console.log(`Asset: ${r.assetId}`);
         console.log(`  Price: ${r.price != null ? `$${r.price}` : "N/A"} (source: ${r.source})`);
       }

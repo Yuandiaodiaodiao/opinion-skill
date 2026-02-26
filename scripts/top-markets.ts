@@ -1,22 +1,20 @@
 // 热门市场 (通过 API)
 // 用法: bun run scripts/top-markets.ts [--tag volume|txn] [--window 1h|4h|24h] [--json]
 
-import { api } from "./config";
+import { apiFetch } from "./config";
 
 async function topMarkets(tag: string, timewindow: string, json: boolean): Promise<void> {
-  const resp = await api.get("/api/analyze/top20", {
-    params: { tag, timewindow },
-  });
+  const resp = await apiFetch<any>("/api/analyze/top20", { tag, timewindow });
 
-  if (!resp.data.success) {
-    console.error("API error:", resp.data.error?.message ?? "unknown");
+  if (!resp.success) {
+    console.error("API error:", resp.error?.message ?? "unknown");
     process.exit(1);
   }
 
-  const { timeWindow, sortBy, startTime, endTime, top20 } = resp.data.data;
+  const { timeWindow, sortBy, startTime, endTime, top20 } = resp.data;
 
   if (json) {
-    console.log(JSON.stringify(resp.data.data, null, 2));
+    console.log(JSON.stringify(resp.data, null, 2));
     return;
   }
 

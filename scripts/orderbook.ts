@@ -1,22 +1,20 @@
 // 查看订单簿
 // 用法: bun run scripts/orderbook.ts <assetId> [--json]
 
-import { api } from "./config";
+import { apiFetch } from "./config";
 
 async function getOrderbook(assetId: string, json: boolean): Promise<void> {
-  const resp = await api.get(`/api/orderbook/${assetId}`, {
-    params: { chainId: "56" },
-  });
+  const resp = await apiFetch<any>(`/api/orderbook/${assetId}`, { chainId: "56" });
 
-  if (!resp.data.success) {
-    console.error("API error:", resp.data.error?.message ?? "unknown");
+  if (!resp.success) {
+    console.error("API error:", resp.error?.message ?? "unknown");
     process.exit(1);
   }
 
-  const { bids, asks, lastPrice, assetId: aid, timestamp } = resp.data.data;
+  const { bids, asks, lastPrice, assetId: aid, timestamp } = resp.data;
 
   if (json) {
-    console.log(JSON.stringify(resp.data.data, null, 2));
+    console.log(JSON.stringify(resp.data, null, 2));
     return;
   }
 
@@ -24,7 +22,6 @@ async function getOrderbook(assetId: string, json: boolean): Promise<void> {
   if (lastPrice != null) console.log(`Last Price: $${lastPrice}`);
   console.log(`Timestamp: ${new Date(timestamp).toLocaleString()}\n`);
 
-  // Bids: high to low
   const sortedBids = [...(bids || [])].sort((a: any, b: any) => parseFloat(b[0]) - parseFloat(a[0]));
   console.log("--- Bids (high to low) ---");
   if (sortedBids.length > 0) {
@@ -35,7 +32,6 @@ async function getOrderbook(assetId: string, json: boolean): Promise<void> {
     console.log("No bids");
   }
 
-  // Asks: low to high
   const sortedAsks = [...(asks || [])].sort((a: any, b: any) => parseFloat(a[0]) - parseFloat(b[0]));
   console.log("\n--- Asks (low to high) ---");
   if (sortedAsks.length > 0) {
@@ -46,7 +42,6 @@ async function getOrderbook(assetId: string, json: boolean): Promise<void> {
     console.log("No asks");
   }
 
-  // Summary
   if (sortedBids.length > 0 && sortedAsks.length > 0) {
     const bestBid = parseFloat(sortedBids[0][0]);
     const bestAsk = parseFloat(sortedAsks[0][0]);
